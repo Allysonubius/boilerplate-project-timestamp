@@ -21,32 +21,27 @@ app.get("/", function(req, res) {
 
 
 // your first API endpoint... 
-app.get("/api/hello", function(req, res) {
-    console.log({ greeting: 'hello API' });
-    res.json({ greeting: 'hello API' });
+app.get("/api/timestamp/", (req, res) => {
+    res.json({ unix: Date.now(), utc: Date() });
 });
 
-app.get("/api/timestamp", function(req, res) {
-    var now = new Date();
-    res.json({
-        "unix ": now.getTime(),
-        "utc ": now.toUTCString()
-    });
-});
+app.get("/api/timestamp/:date_string", (req, res) => {
+    let dateString = req.params.date_string;
 
-// your API date_string
-app.get("/api/timestamp/:date_string", function(req, res) {
-    let dateSttring = req.params.date_string;
-    console.log(dateSttring);
-
-    let passedInValue = new Date(dateSttring);
-    if (passedInValue == "Invalid Date") {
-        res.json({ "error": "Invalid Date" })
+    //A 4 digit number is a valid ISO-8601 for the beginning of that year
+    //5 digits or more must be a unix time, until we reach a year 10,000 problem
+    if (/\d{5,}/.test(dateString)) {
+        const dateInt = parseInt(dateString);
+        //Date regards numbers as unix timestamps, strings are processed differently
+        res.json({ unix: dateInt, utc: new Date(dateInt).toUTCString() });
     } else {
-        res.json({
-            "unix ": passedInValue.getTime(),
-            "utc ": passedInValue.toUTCString
-        })
+        let dateObject = new Date(dateString);
+
+        if (dateObject.toString() === "Invalid Date") {
+            res.json({ error: "Invalid Date" });
+        } else {
+            res.json({ unix: dateObject.valueOf(), utc: dateObject.toUTCString() });
+        }
     }
 });
 
